@@ -7,6 +7,7 @@
 - 特徵工程與探索式分析（EDA）
 - 文字向量化（TF-IDF）
 - 模型訓練與比較（Logistic Regression、LinearSVC）
+- 5-fold Cross Validation 與 OOF（Out-of-Fold）評估
 - 評估指標與視覺化（Confusion Matrix、ROC、PR Curve）
 
 ---
@@ -66,14 +67,22 @@
   - `max_features=10000`
   - `stop_words="english"`
   - `ngram_range=(1, 2)`
+  - 已移入每個 fold 的 `Pipeline` 內做 fit，避免資訊洩漏
 
 ### 7. 模型訓練與比較
 目前嘗試的模型：
 - Logistic Regression
 - LinearSVC（搭配 CalibratedClassifierCV，產生機率以便畫 ROC/PR）
 
+### 8. 5-fold Cross Validation 與 OOF
+- 對訓練集做 `StratifiedKFold(n_splits=5)`
+- 每個 fold 都各自 fit `TF-IDF + model`
+- 產生 OOF 預測，作為更嚴謹的訓練集評估
+- 最後再用完整訓練集訓練 final model，輸出 test set 結果
+
 並輸出：
 - 每個模型的分類報告（Precision / Recall / F1 / Accuracy）
+- OOF 分類報告與 Accuracy
 - Confusion Matrix
 - ROC Curve（AUC）
 - Precision-Recall Curve（AUPRC）
@@ -104,7 +113,7 @@
 - 嘗試更多模型（如 MultinomialNB、XGBoost、LightGBM）
 - 加入文字清理流程（去停用詞、詞形還原、正規化）
 - 改變 TF-IDF 參數（min_df、max_df、ngram）
-- 做交叉驗證（Cross Validation）取代單次切分
+- 擴充不同的交叉驗證策略與 seed，觀察穩定性
 - 加入模型保存與推論函式（deployment-friendly）
 - 做錯誤分析（看哪些樣本最容易被誤判）
 
@@ -118,9 +127,10 @@
 | 基礎前處理 | 已完成 | 建立 content 欄位（title + text） |
 | EDA 與特徵工程 | 已完成 | 長度、詞數、符號與大寫比例等特徵 |
 | 視覺化輸出 | 已完成 | 已產出 EDA 與模型比較圖 |
-| TF-IDF 向量化 | 已完成 | 使用 unigram + bigram |
-| 模型訓練（LR / LinearSVC） | 已完成 | 完成訓練與推論 |
+| TF-IDF 向量化 | 已完成 | 使用 unigram + bigram，且放入 fold 內的 Pipeline |
+| 模型訓練（LR / LinearSVC） | 已完成 | 改為 5-fold OOF + final model 流程 |
 | 模型評估（ROC/PR/CM） | 已完成 | 含 AUC、AUPRC、Confusion Matrix |
+| 交叉驗證與 OOF | 已完成 | 使用 StratifiedKFold 做更嚴謹評估 |
 | 超參數調整 | 進行中 | 可用 GridSearchCV / RandomizedSearchCV |
 | 新模型擴充 | 未開始 | 待加入 Naive Bayes、Boosting 類模型 |
 | 模型保存與推論 API | 未開始 | 待補 joblib 與推論流程 |
